@@ -1,0 +1,170 @@
+
+import javafx.application.Application;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+
+import java.text.NumberFormat;
+import java.util.Locale;
+
+public class TipCalculator extends Application {
+
+    private TextField billField;
+    private ComboBox<Integer> tipComboBox;
+    private Label tipResult;
+    private Label totalResult;
+
+    private final NumberFormat currency =
+            NumberFormat.getCurrencyInstance(
+                    Locale.forLanguageTag("en-IN")
+            );
+
+    @Override
+    public void start(Stage stage) {
+
+        // Title
+        Label title = new Label("Tip Calculator");
+        title.setStyle(
+                "-fx-font-size: 26px; -fx-font-weight: bold;"
+        );
+
+        // Bill amount input
+        Label billLabel = new Label("Bill Amount (₹):");
+        billField = new TextField();
+        billField.setPromptText("Enter bill amount");
+
+        // Tip percentage selection
+        Label tipLabel = new Label("Tip Percentage:");
+        tipComboBox = new ComboBox<>();
+        tipComboBox.getItems().addAll(5, 10, 15, 20, 25);
+        tipComboBox.setValue(15);
+        tipComboBox.setMaxWidth(Double.MAX_VALUE);
+
+        // Calculate button
+        Button calculateButton = new Button("Calculate Tip");
+        calculateButton.setMaxWidth(Double.MAX_VALUE);
+        calculateButton.setStyle(
+                "-fx-background-color: #2563eb;" +
+                "-fx-text-fill: white;" +
+                "-fx-font-size: 14px;"
+        );
+
+        // Result labels
+        tipResult = new Label("Tip Amount: ₹0.00");
+        totalResult = new Label("Total Amount: ₹0.00");
+
+        tipResult.setStyle("-fx-font-size: 16px;");
+        totalResult.setStyle(
+                "-fx-font-size: 18px; -fx-font-weight: bold;"
+        );
+
+        // Grid for input components
+        GridPane grid = new GridPane();
+        grid.setHgap(12);
+        grid.setVgap(15);
+
+        grid.add(billLabel, 0, 0);
+        grid.add(billField, 1, 0);
+        grid.add(tipLabel, 0, 1);
+        grid.add(tipComboBox, 1, 1);
+
+        // Make input column expand
+        billField.setMaxWidth(Double.MAX_VALUE);
+        grid.getColumnConstraints().add(
+                new javafx.scene.layout.ColumnConstraints(120)
+        );
+        grid.getColumnConstraints().add(
+                new javafx.scene.layout.ColumnConstraints(200)
+        );
+
+        // Results section
+        VBox results = new VBox(12, tipResult, totalResult);
+        results.setPadding(new Insets(15));
+        results.setStyle(
+                "-fx-background-color: #eff6ff;" +
+                "-fx-background-radius: 10;"
+        );
+
+        // Main layout
+        VBox root = new VBox(
+                20,
+                title,
+                grid,
+                calculateButton,
+                results
+        );
+
+        root.setPadding(new Insets(25));
+        root.setAlignment(Pos.CENTER);
+        root.setPrefWidth(400);
+        root.setStyle("-fx-background-color: white;");
+
+        // Handle button click
+        calculateButton.setOnAction(event -> calculateTip());
+
+        // Optional: press Enter in the bill field to calculate
+        billField.setOnAction(event -> calculateTip());
+
+        Scene scene = new Scene(root, 430, 380);
+
+        stage.setTitle("Tip Calculator");
+        stage.setScene(scene);
+        stage.setResizable(false);
+        stage.show();
+    }
+
+    private void calculateTip() {
+        try {
+            String input = billField.getText().trim();
+
+            if (input.isEmpty()) {
+                showError("Please enter the bill amount.");
+                return;
+            }
+
+            double bill = Double.parseDouble(input);
+
+            if (!Double.isFinite(bill) || bill <= 0) {
+                showError("Bill amount must be greater than zero.");
+                return;
+            }
+
+            int percentage = tipComboBox.getValue();
+
+            double tip = bill * percentage / 100.0;
+            double total = bill + tip;
+
+            tipResult.setText(
+                    "Tip Amount: " + currency.format(tip)
+            );
+
+            totalResult.setText(
+                    "Total Amount: " + currency.format(total)
+            );
+
+        } catch (NumberFormatException e) {
+            showError("Enter a valid number, such as 500 or 500.50.");
+        }
+    }
+
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Invalid Input");
+        alert.setHeaderText("Unable to calculate tip");
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+}
